@@ -546,13 +546,31 @@ function exportJson() {
 
 function importJson(file) {
   file.text().then(text => {
-    const payload = JSON.parse(text);
-    const wishes = Array.isArray(payload) ? payload : payload.wishes;
+    /* Strip RTF wrapper if the file was saved via TextEdit / macOS rich text */
+    let cleaned = text.trim();
+    if (cleaned.startsWith('{\\rtf')) {
+      /* Remove RTF header and control sequences, extract raw JSON */
+      cleaned = cleaned
+        .replace(/^\{\\rtf[\s\S]*?\\cf0\s*/, '')  /* strip RTF preamble */
+        .replace(/\\\{/g, '{').replace(/\\\}/g, '}') /* unescape braces */
+        .replace(/\\\n/g, '\n')                      /* unescape newlines */
+        .replace(/\\uc0/g, '')                        /* remove \uc0 */
+        .replace(/\\u(\d+)\s?/g, (_, code) => String.fromCharCode(Number(code))) /* decode \uNNNN */
+        .replace(/\\[a-z]+\d*\s?/g, '')               /* strip remaining RTF commands */
+        .replace(/\}\s*$/, '');                         /* remove trailing RTF brace */
+      /* Find outermost JSON object */
+      const start = cleaned.indexOf('{');
+      const end = cleaned.lastIndexOf('}');
+      if (start !== -1 && end !== -1) cleaned = cleaned.slice(start, end + 1);
+    }
+    const payload = JSON.parse(cleaned);
+    /* Support both "wishes" and "items" keys */
+    const wishes = Array.isArray(payload) ? payload : (payload.wishes || payload.items);
     if (!Array.isArray(wishes)) throw new Error('Bad file');
     state.wishes = wishes.map(item => ({
       id: item.id || uid(),
       title: item.title || 'Untitled wish',
-      category: item.category || 'Other',
+      category: item.category || 'Разное',
       currency: item.currency || 'USD',
       price: Number(item.price || 0),
       link: item.link || '',
@@ -561,10 +579,10 @@ function importJson(file) {
     }));
     renderCards();
     setStorageStatus(true, 'JSON загружен в память страницы');
-    toast('Wishlist импортирован');
+    toast(`Импортировано ${state.wishes.length} wishes`);
   }).catch(error => {
     console.error(error);
-    toast('Ошибка импорта JSON');
+    toast('Ошибка: файл повреждён или это не JSON. Проверь, что файл сохранён как .json, а не .rtf');
   });
 }
 
