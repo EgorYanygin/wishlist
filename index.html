@@ -325,7 +325,7 @@
               </div>
             </label>
             <div class="btn-row">
-              <button class="btn btn-primary" type="submit">Добавить</button>
+              <button class="btn btn-primary" type="submit" id="submitBtn">Добавить</button>
               <button class="btn" type="button" id="clearFormBtn">Очистить</button>
               <button class="btn" type="button" id="demoBtn">Демо</button>
               <button class="btn" type="button" id="exportBtn">Скачать JSON</button>
@@ -466,8 +466,9 @@ function renderCards() {
       <div class="meta-line" style="grid-template-columns:1fr;padding-top:8px">
         <div><strong>Цена:</strong> ${formatMoney(item.price, item.currency)}</div>
       </div>
-      <div class="actions" style="grid-template-columns:1fr 1fr;">
-        ${item.link ? `<a class="btn btn-primary" href="${item.link}" target="_blank" rel="noopener noreferrer">Open product</a>` : '<span></span>'}
+      <div class="actions" style="grid-template-columns:1fr 1fr 1fr;">
+        ${item.link ? `<a class="btn btn-primary" href="${item.link}" target="_blank" rel="noopener noreferrer">Open</a>` : '<span></span>'}
+        <button class="btn" type="button" data-edit="${item.id}">Edit</button>
         <button class="btn btn-ghost" type="button" data-delete="${item.id}">Delete</button>
       </div>
     </article>`;
@@ -558,7 +559,7 @@ async function importFromLink() {
         break;
       }
     }
-    if (title && !els.titleInput.value.trim()) els.titleInput.value = title.replace(/\s+/g, ' ');
+    if (title) els.titleInput.value = title.replace(/\s+/g, ' ');
     if (image && !els.imageInput.value.trim()) els.imageInput.value = image;
     if (foundPrice && !els.priceInput.value) els.priceInput.value = foundPrice;
     if (foundCurrency) els.currencyInput.value = foundCurrency;
@@ -665,19 +666,58 @@ els.wishForm.addEventListener('submit', event => {
   event.preventDefault();
   const item = getFormData();
   if (!item.title) { toast('Добавь название wish'); return; }
-  state.wishes.unshift(item);
+  if (editingId) {
+    /* Update existing wish in place */
+    const idx = state.wishes.findIndex(w => w.id === editingId);
+    if (idx !== -1) {
+      item.id = editingId;
+      item.createdAt = state.wishes[idx].createdAt;
+      state.wishes[idx] = item;
+    }
+    editingId = null;
+    document.getElementById('submitBtn').textContent = 'Добавить';
+    toast('Wish обновлён');
+  } else {
+    state.wishes.unshift(item);
+    toast('Wish добавлен');
+  }
   clearForm();
   renderCards();
   setStorageStatus(true, 'Данные живут в памяти страницы · для сохранения скачай JSON');
-  toast('Wish added');
 });
 
+let editingId = null;
+
 els.cards.addEventListener('click', event => {
-  const deleteId = event.target.getAttribute('data-delete');
+  const btn = event.target.closest('[data-delete],[data-edit]');
+  if (!btn) return;
+
+  const deleteId = btn.getAttribute('data-delete');
   if (deleteId) {
     state.wishes = state.wishes.filter(item => item.id !== deleteId);
     renderCards();
     toast('Wish удалён');
+    return;
+  }
+
+  const editId = btn.getAttribute('data-edit');
+  if (editId) {
+    const wish = state.wishes.find(w => w.id === editId);
+    if (!wish) return;
+    /* Fill form with wish data */
+    els.titleInput.value = wish.title || '';
+    els.linkInput.value = wish.link || '';
+    els.categoryInput.value = wish.category || 'Разное';
+    els.imageInput.value = wish.image || '';
+    els.currencyInput.value = wish.currency || 'USD';
+    els.priceInput.value = wish.price || '';
+    editingId = editId;
+    document.getElementById('submitBtn').textContent = 'Сохранить';
+    renderPreview();
+    /* Scroll form into view */
+    els.wishForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    els.titleInput.focus();
+    toast('Редактируй и нажми Сохранить');
   }
 });
 
