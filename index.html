@@ -156,11 +156,12 @@
     .tag{display:inline-flex;align-items:center;min-height:34px;padding:.45rem .75rem;border:2px solid var(--color-border);
       border-radius:999px;font-family:var(--font-accent);font-size:.88rem;text-transform:uppercase;font-weight:700;
       background:linear-gradient(135deg,#FF1493,#9C27B0);color:#fff}
-    .wish-title,.wish-card-title{margin:0 0 8px;font-family:var(--font-accent);font-weight:800;font-size:1.35rem;line-height:1.05}
+    .wish-title,.wish-card-title{margin:0 0 8px;font-family:var(--font-accent);font-weight:800;font-size:1.35rem;line-height:1.05;
+      word-break:break-word;overflow-wrap:anywhere}
     .price{font-family:var(--font-display);font-size:2rem;line-height:1;color:#FF1493}
     .toolbar{grid-template-columns:1.3fr repeat(2,minmax(150px,.7fr));margin-bottom:var(--space-4)}
 
-    .cards{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+    .cards{grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr))}
     .wish-card{display:grid;
       border-image:linear-gradient(135deg,#FF0000,#FF8C00,#FFD700,#00C853,#2979FF,#9C27B0) 1;
       border-style:solid;border-width:4px;border-radius:28px;
@@ -173,7 +174,7 @@
     .wish-footer{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px}
     .mini{font-size:.86rem;color:var(--color-text-muted);font-family:var(--font-accent);text-transform:uppercase}
 
-    .actions{display:grid;gap:8px;padding:12px 16px 16px}
+    .actions{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px 16px}
     .meta-line{display:grid;padding:0 16px}
     .wish-meta{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px}
 
@@ -207,11 +208,42 @@
       .main-grid{grid-template-columns:1fr}
       .toolbar{grid-template-columns:1fr}
     }
-    @media (max-width: 600px){
+    @media (max-width: 768px){
+      .shell{padding:10px 8px 30px}
+      .frame{padding:14px 12px 20px;border-radius:22px;border-width:4px}
+      .page-stripes{opacity:.04}
       .topbar{flex-direction:column;align-items:flex-start;gap:var(--space-3)}
-      .hero h1{font-size:clamp(2.4rem,8vw,4rem)}
+      .brand{gap:12px}
+      .rainbow-ring{width:56px;height:56px}
+      .brand-title{font-size:clamp(1.6rem,6vw,2.5rem)}
+      .version-chip{font-size:.75rem;padding:.4rem .7rem}
+      .hero{padding:var(--space-4) 0;margin-bottom:var(--space-4)}
+      .hero h1{font-size:clamp(2rem,7vw,3.2rem)}
+      .hero-sub{font-size:clamp(.85rem,3vw,1rem)}
       .hero-stats{flex-direction:column;align-items:stretch}
+      .stats-badge{padding:8px 14px}
+      .storage-status{font-size:.75rem}
+      .section-title{font-size:1.1rem}
+      .wish-card-title{font-size:1.1rem}
+      .price{font-size:1.5rem}
+      .cards{grid-template-columns:1fr}
+      .toolbar{grid-template-columns:1fr}
       .inline-row.two{grid-template-columns:1fr}
+      .btn-row{flex-wrap:wrap}
+      .btn{font-size:.8rem;padding:.5rem .7rem}
+      .actions .btn{flex:1;min-width:0;font-size:.78rem;padding:.45rem .55rem}
+      .tag{font-size:.76rem;padding:.35rem .55rem;min-height:28px}
+      .how-to{font-size:.85rem;padding:var(--space-3)}
+      .how-to strong{font-size:.95rem}
+      .toast{font-size:.8rem;padding:10px 16px}
+      .toast-zone{right:10px;top:14px;left:10px}
+    }
+    @media (max-width: 400px){
+      .shell{padding:6px 4px 24px}
+      .frame{padding:10px 8px 16px;border-radius:18px}
+      .cards{grid-template-columns:1fr}
+      .actions{gap:6px;padding:8px 12px 12px}
+      .actions .btn{font-size:.72rem;padding:.4rem .5rem}
     }
   </style>
 </head>
@@ -483,7 +515,7 @@ function renderCards() {
       <div class="meta-line" style="grid-template-columns:1fr;padding-top:8px">
         <div><strong>Цена:</strong> ${formatMoney(item.price, item.currency)}</div>
       </div>
-      <div class="actions" style="grid-template-columns:1fr 1fr 1fr;">
+      <div class="actions">
         ${item.link ? `<a class="btn btn-primary" href="${item.link}" target="_blank" rel="noopener noreferrer">Open</a>` : '<span></span>'}
         <button class="btn" type="button" data-edit="${item.id}">Edit</button>
         <button class="btn btn-ghost" type="button" data-delete="${item.id}">Delete</button>
